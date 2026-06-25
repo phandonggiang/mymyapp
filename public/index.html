@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://code.responsivevoice.org/responsivevoice.js?key=FREE"></script>
 
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -410,26 +411,59 @@
   if (!('speechSynthesis' in window)) noSupport.classList.add('visible');
 
   /* ── Voice population ─────────────────────────────────────────
-     Lấy giọng en-* từ system, loại bỏ tất cả giọng Google.
+     Nhóm 1: Giọng US English từ ResponsiveVoice (prefix "rv:")
+     Nhóm 2: Giọng en-* từ system, loại bỏ Google (prefix "ws:")
   ─────────────────────────────────────────────────────────────── */
+
+  // Danh sách giọng US English của ResponsiveVoice
+  const RV_EN_VOICES = [
+    'US English Female',
+    'US English Male',
+    'UK English Female',
+    'UK English Male',
+    'Australian Female',
+    'Australian Male',
+  ];
+
+  function addOptGroup(label, items, valueMapper, textMapper) {
+    if (!items.length) return;
+    const grp = document.createElement('optgroup');
+    grp.label = label;
+    items.forEach(item => {
+      const opt = document.createElement('option');
+      opt.value       = valueMapper(item);
+      opt.textContent = textMapper(item);
+      grp.appendChild(opt);
+    });
+    voiceSelect.appendChild(grp);
+  }
+
   function populateVoices() {
     const all = synth.getVoices();
-    if (!all.length) return;
-
     voiceSelect.innerHTML = '';
 
-    const voices = all.filter(v =>
+    // Nhóm 1: ResponsiveVoice – US/UK/AU English (luôn có sẵn, không cần cài)
+    addOptGroup(
+      '🌐 English – ResponsiveVoice',
+      RV_EN_VOICES,
+      name => 'rv:' + name,
+      name => name
+    );
+
+    // Nhóm 2: System voices – en-* (Microsoft, Apple…), bỏ Google
+    const sysVoices = all.filter(v =>
       v.lang.toLowerCase().startsWith('en') &&
       !v.name.toLowerCase().startsWith('google')
     );
+    addOptGroup(
+      '💻 English – System Voices',
+      sysVoices,
+      v => 'ws:' + v.name,
+      v => `${v.name} (${v.lang})`
+    );
 
-    voices.forEach(v => {
-      const opt = document.createElement('option');
-      opt.value       = v.name;
-      opt.textContent = `${v.name} (${v.lang})`;
-      if (v.default) opt.selected = true;
-      voiceSelect.appendChild(opt);
-    });
+    // Mặc định: giọng RV đầu tiên
+    if (voiceSelect.options.length) voiceSelect.options[0].selected = true;
   }
 
   populateVoices();
@@ -564,9 +598,41 @@
      │      → tự động bật timer-based highlight             │
      └───────────────────────────────────────────────────────┘
   ══════════════════════════════════════════════════════════ */
+  /* ══════════════════════════════════════════════════════════
+     ENGINE 1: RESPONSIVEVOICE
+     Dùng timer-based highlight vì RV không có onboundary.
+  ══════════════════════════════════════════════════════════ */
+  let rvPauseIdx = 0;
+  let rvRate     = 1;
+
+  function speakRV(text, rvVoiceName, rate) {
+    if (typeof responsiveVoice === 'undefined') {
+      setStatus('', '❌ Không tải được ResponsiveVoice (kiểm tra internet)');
+      return;
+    }
+    responsiveVoice.cancel();
+    clearTimerHighlight();
+    buildWordSpans(text);
+    clearHighlights();
+    rvPauseIdx = 0;
+    rvRate     = rate;
+
+    startTimerHighlight(rate, 0, 350);
+
+    responsiveVoice.speak(text, rvVoiceName, {
+      rate,
+      onstart: () => { setStatus('playing', 'Đang đọc… 🎵'); setButtonState('playing'); },
+      onend:   finishReading,
+      onerror: () => { clearTimerHighlight(); setStatus('', '❌ Lỗi phát âm'); setButtonState('idle'); },
+    });
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     ENGINE 2: WEB SPEECH API
+  ══════════════════════════════════════════════════════════ */
   let utterance      = null;
-  let wordCounter    = 0;   // fallback word counter (tầng 2)
-  let boundaryFired  = false; // để phát hiện tầng 3
+  let wordCounter    = 0;
+  let boundaryFired  = false;
 
   function speakWS(text, voiceName, rate) {
     synth.cancel();
@@ -634,6 +700,14 @@
     synth.speak(utterance);
   }
 
+  function isRV() { return voiceSelect.value.startsWith('rv:'); }
+
+  function stopAll() {
+    synth.cancel();
+    if (typeof responsiveVoice !== 'undefined') responsiveVoice.cancel();
+    clearTimerHighlight();
+  }
+
   /* ── Start ──────────────────────────────────────────────── */
   btnStart.addEventListener('click', () => {
     const text = inputText.value.trim();
@@ -643,25 +717,41 @@
       setTimeout(() => (inputText.style.borderColor = ''), 1500);
       return;
     }
-    synth.cancel();
-    clearTimerHighlight();
-    speakWS(text, voiceSelect.value, parseFloat(rateSelect.value));
+    stopAll();
+    const val  = voiceSelect.value;
+    const rate = parseFloat(rateSelect.value);
+    if (isRV()) speakRV(text, val.slice(3), rate);
+    else        speakWS(text, val.slice(3), rate);
   });
 
   /* ── Pause ──────────────────────────────────────────────── */
   btnPause.addEventListener('click', () => {
-    if (synth.speaking && !synth.paused) synth.pause();
+    if (isRV()) {
+      rvPauseIdx = activeIndex;
+      clearTimerHighlight();
+      if (typeof responsiveVoice !== 'undefined') responsiveVoice.pause();
+      setStatus('paused', 'Đã tạm dừng ⏸');
+      setButtonState('paused');
+    } else {
+      if (synth.speaking && !synth.paused) synth.pause();
+    }
   });
 
   /* ── Resume ─────────────────────────────────────────────── */
   btnResume.addEventListener('click', () => {
-    if (synth.paused) synth.resume();
+    if (isRV()) {
+      startTimerHighlight(rvRate, rvPauseIdx, 0);
+      if (typeof responsiveVoice !== 'undefined') responsiveVoice.resume();
+      setStatus('playing', 'Đang đọc… 🎵');
+      setButtonState('playing');
+    } else {
+      if (synth.paused) synth.resume();
+    }
   });
 
   /* ── Stop ───────────────────────────────────────────────── */
   btnStop.addEventListener('click', () => {
-    synth.cancel();
-    clearTimerHighlight();
+    stopAll();
     clearHighlights();
     setStatus('', 'Đã hủy');
     setButtonState('idle');
@@ -672,7 +762,10 @@
     if (document.activeElement === inputText) return;
     if (e.code === 'Space') {
       e.preventDefault();
-      if (synth.speaking && !synth.paused) btnPause.click();
+      const playing = isRV()
+        ? (typeof responsiveVoice !== 'undefined' && responsiveVoice.isPlaying())
+        : (synth.speaking && !synth.paused);
+      if (playing) btnPause.click();
       else btnResume.click();
     }
     if (e.code === 'Escape') btnStop.click();
