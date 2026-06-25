@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MYMY APP – Đọc Văn Bản</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:              #fff5f9;
+      --bg2:             #ffeef5;
+      --surface:         #ffffff;
+      --border:          #f9c8e0;
+      --border-focus:    #f472b6;
+      --text-primary:    #4a2040;
+      --text-secondary:  #a0617e;
+      --text-muted:      #d4a0b8;
+      --pink:            #f472b6;
+      --pink-dark:       #ec4899;
+      --pink-light:      #fce7f3;
+      --rose:            #fb7185;
+      --lavender:        #c084fc;
+      --peach:           #fdba74;
+      --radius-sm:  8px;
+      --radius-md:  16px;
+      --radius-lg:  24px;
+      --shadow-card: 0 4px 24px rgba(244,114,182,.18);
+      --shadow-btn:  0 4px 14px rgba(244,114,182,.35);
+      --font: 'Nunito', 'Segoe UI', sans-serif;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text-primary);
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 28px 16px 72px;
+      background-image: radial-gradient(circle, #f9c8e0 1px, transparent 1px);
+      background-size: 28px 28px;
+    }
+    body::before, body::after {
+      content: '';
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: .35;
+      pointer-events: none;
+      z-index: 0;
+    }
+    body::before {
+      width: 420px; height: 420px;
+      background: radial-gradient(circle, #f9a8d4, #c084fc);
+      top: -120px; right: -100px;
+    }
+    body::after {
+      width: 360px; height: 360px;
+      background: radial-gradient(circle, #fdba74, #fb7185);
+      bottom: -80px; left: -80px;
+    }
+
+    .app-wrapper {
+      position: relative; z-index: 1;
+      width: 100%; max-width: 800px;
+      display: flex; flex-direction: column; gap: 20px;
+    }
+
+    header { text-align: center; padding: 8px 0 4px; }
+    .logo {
+      display: inline-flex; align-items: center; gap: 10px; margin-bottom: 6px;
+    }
+    .logo-icon {
+      width: 48px; height: 48px;
+      background: linear-gradient(135deg, #f472b6, #c084fc);
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 16px rgba(244,114,182,.45);
+    }
+    header h1 {
+      font-size: clamp(1.6rem, 5vw, 2.4rem);
+      font-weight: 800;
+      background: linear-gradient(135deg, #ec4899 0%, #c084fc 60%, #fb7185 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -.5px;
+    }
+    header p { margin-top: 5px; font-size: .88rem; color: var(--text-secondary); font-weight: 500; }
+
+    .card {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 22px;
+      box-shadow: var(--shadow-card);
+    }
+    .card-label {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: .72rem; font-weight: 700; letter-spacing: .09em;
+      text-transform: uppercase; color: var(--pink); margin-bottom: 12px;
+    }
+
+    #inputText {
+      width: 100%; min-height: 150px; resize: vertical;
+      background: var(--bg2); border: 1.5px solid var(--border);
+      border-radius: var(--radius-md); color: var(--text-primary);
+      font-family: var(--font); font-size: 1rem; font-weight: 500;
+      line-height: 1.75; padding: 14px 16px; outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    #inputText:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 4px rgba(244,114,182,.15);
+    }
+    #inputText::placeholder { color: var(--text-muted); font-weight: 400; }
+
+    .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; }
+    .select-group { display: flex; flex-direction: column; gap: 5px; flex: 1 1 200px; }
+    .select-group label { font-size: .78rem; font-weight: 700; color: var(--text-secondary); }
+    select {
+      background: var(--bg2); border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm); color: var(--text-primary);
+      font-family: var(--font); font-size: .85rem; font-weight: 600;
+      padding: 9px 32px 9px 12px; outline: none; cursor: pointer;
+      transition: border-color .2s, box-shadow .2s; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23f472b6' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 10px center;
+    }
+    select:focus { border-color: var(--border-focus); box-shadow: 0 0 0 3px rgba(244,114,182,.15); }
+
+    .btn-group { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-end; }
+    button {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 10px 18px; border: none; border-radius: 999px;
+      font-family: var(--font); font-size: .875rem; font-weight: 700;
+      cursor: pointer; transition: all .18s cubic-bezier(.22,.68,0,1.2);
+      outline: none; white-space: nowrap;
+    }
+    button:focus-visible { box-shadow: 0 0 0 3px rgba(244,114,182,.4); }
+    button:active { transform: scale(.95); }
+    button:disabled { opacity: .4; cursor: not-allowed; pointer-events: none; }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #f472b6, #c084fc);
+      color: #fff; box-shadow: var(--shadow-btn);
+    }
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #ec4899, #a855f7);
+      box-shadow: 0 6px 20px rgba(244,114,182,.5);
+      transform: translateY(-1px);
+    }
+    .btn-secondary {
+      background: var(--pink-light); color: var(--pink-dark);
+      border: 1.5px solid var(--border);
+    }
+    .btn-secondary:hover { background: #fce7f3; border-color: var(--pink); }
+    .btn-danger {
+      background: #fff1f2; color: var(--rose); border: 1.5px solid #fecdd3;
+    }
+    .btn-danger:hover { background: #ffe4e6; border-color: var(--rose); }
+
+    .status-row { display: flex; align-items: center; gap: 12px; }
+    .status-bar {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 6px 14px; border-radius: 999px;
+      border: 1.5px solid var(--border); background: var(--surface);
+      font-size: .78rem; font-weight: 700; color: var(--text-secondary);
+      transition: all .25s; white-space: nowrap;
+    }
+    .status-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--text-muted); transition: background .25s; flex-shrink: 0;
+    }
+    .status-bar.playing  { border-color: #6ee7b7; color: #059669; }
+    .status-bar.playing .status-dot  { background: #10b981; animation: pulse 1.2s infinite; }
+    .status-bar.paused   { border-color: var(--peach); color: #b45309; }
+    .status-bar.paused .status-dot   { background: var(--peach); }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+    .progress-track { flex: 1; height: 6px; background: var(--pink-light); border-radius: 99px; overflow: hidden; }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #f472b6, #c084fc);
+      border-radius: 99px; width: 0%; transition: width .12s linear;
+    }
+
+    /* ── Reading Area ── */
+    #readingArea {
+      min-height: 80px; font-size: 1.12rem; font-weight: 500;
+      line-height: 2.2; color: var(--text-primary);
+      word-spacing: 2px; display: none;
+    }
+    #readingArea.visible { display: block; }
+    #readingArea .word {
+      display: inline; padding: 2px 4px; border-radius: 6px;
+      transition: background .11s cubic-bezier(.22,.68,0,1.2),
+                  color .11s cubic-bezier(.22,.68,0,1.2),
+                  box-shadow .11s;
+      cursor: default;
+    }
+    #readingArea .word.active {
+      background: linear-gradient(135deg, #ec4899, #c084fc);
+      color: #fff; border-radius: 7px;
+      box-shadow: 0 2px 10px rgba(244,114,182,.45);
+    }
+    #readingArea .word.done { color: var(--text-muted); }
+
+    .reading-placeholder {
+      color: var(--text-muted); font-size: .88rem;
+      display: flex; align-items: center; gap: 8px; font-style: italic;
+    }
+
+    /* ── Info box (hướng dẫn cài giọng) ── */
+    .info-box {
+      background: #fff7ed;
+      border: 1.5px solid #fed7aa;
+      border-radius: var(--radius-md);
+      padding: 14px 18px;
+      font-size: .84rem;
+      font-weight: 600;
+      color: #92400e;
+      display: none;
+      line-height: 1.7;
+    }
+    .info-box.visible { display: block; }
+    .info-box strong { color: #c2410c; }
+
+    .warning {
+      background: #fff1f2; border: 1.5px solid #fecdd3; color: var(--rose);
+      border-radius: var(--radius-md); padding: 12px 16px;
+      font-size: .875rem; font-weight: 600; display: none;
+    }
+    .warning.visible { display: block; }
+
+    /* ── Engine badge ── */
+
+    /* ── Decorative floats ── */
+    .hearts {
+      position: fixed; bottom: 20px; right: 20px;
+      display: flex; gap: 6px; pointer-events: none; z-index: 0;
+    }
+    .hearts span { font-size: 1.2rem; opacity: .18; animation: float 3s ease-in-out infinite; }
+    .hearts span:nth-child(2) { animation-delay: .8s; }
+    .hearts span:nth-child(3) { animation-delay: 1.6s; }
+    @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+
+    @media (max-width: 580px) {
+      .controls { flex-direction: column; }
+      .select-group { flex: 1 1 100%; }
+      .btn-group { width: 100%; }
+      .btn-group button { flex: 1; }
+    }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+  </style>
+</head>
+<body>
+
+<div class="hearts" aria-hidden="true">
+  <span>🌸</span><span>💕</span><span>✨</span>
+</div>
+
+<div class="app-wrapper">
+
+  <header>
+    <div class="logo">
+      <div class="logo-icon">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+          <line x1="12" y1="19" x2="12" y2="23"/>
+          <line x1="8"  y1="23" x2="16" y2="23"/>
+        </svg>
+      </div>
+      <h1>MYMY APP</h1>
+    </div>
+    <p>✨ Đọc văn bản thông minh, đồng bộ từng từ ✨</p>
+  </header>
+
+  <div class="warning" id="noSupport">
+    Trình duyệt chưa hỗ trợ Web Speech API. Vui lòng dùng Chrome hoặc Edge 💖
+  </div>
+
+  <!-- Input -->
+  <div class="card">
+    <div class="card-label">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>
+      </svg>
+      Văn bản đầu vào
+    </div>
+    <textarea id="inputText"
+      placeholder="Học giỏi để có kẹo từ cô My 🍬"
+      spellcheck="false"
+      aria-label="Vùng nhập văn bản"></textarea>
+  </div>
+
+  <!-- Settings -->
+  <div class="card">
+    <div class="card-label" style="justify-content:space-between;width:100%;display:flex;align-items:center;">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
+      </svg>
+      Cài đặt &amp; Điều khiển
+    </div>
+
+    <div class="controls">
+      <div class="select-group">
+        <label for="voiceSelect">💬 Giọng đọc</label>
+        <select id="voiceSelect" aria-label="Chọn giọng đọc"></select>
+      </div>
+      <div class="select-group">
+        <label for="rateSelect">⚡ Tốc độ</label>
+        <select id="rateSelect" aria-label="Chọn tốc độ đọc">
+          <option value="0.6">0.6× – Rất chậm</option>
+          <option value="0.8">0.8× – Chậm</option>
+          <option value="1.0" selected>1.0× – Bình thường</option>
+          <option value="1.3">1.3× – Nhanh</option>
+          <option value="1.6">1.6× – Rất nhanh</option>
+          <option value="2.0">2.0× – Tốc độ cao</option>
+        </select>
+      </div>
+      <div class="btn-group">
+        <button class="btn-primary" id="btnStart" aria-label="Bắt đầu đọc">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+          Bắt đầu
+        </button>
+        <button class="btn-secondary" id="btnPause" disabled aria-label="Tạm dừng">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+          Dừng
+        </button>
+        <button class="btn-secondary" id="btnResume" disabled aria-label="Tiếp tục" style="display:none">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+          Tiếp
+        </button>
+        <button class="btn-danger" id="btnStop" disabled aria-label="Hủy">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+          Hủy
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status + Progress -->
+  <div class="status-row">
+    <div class="status-bar" id="statusBar">
+      <span class="status-dot"></span>
+      <span id="statusText">Chờ bắt đầu</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+  </div>
+
+  <!-- Reading area -->
+  <div class="card">
+    <div class="card-label">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+      </svg>
+      Đang đọc
+    </div>
+    <div id="readingArea" role="region" aria-live="polite" aria-label="Khu vực đọc văn bản">
+      <span class="reading-placeholder">
+        🌸 Văn bản sẽ hiển thị tại đây khi bạn nhấn "Bắt đầu"…
+      </span>
+    </div>
+  </div>
+
+</div><!-- /.app-wrapper -->
+
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   MYMY APP — WEB SPEECH API + WORD SYNC
+
+   Chỉ dùng Web Speech API (en-* system voices, loại bỏ Google).
+   Highlight 3 tầng dự phòng:
+     Tầng 1: onboundary + charIndex > 0  → binary search (chính xác)
+     Tầng 2: onboundary + charIndex = 0  → word counter tuần tự
+     Tầng 3: onboundary không fire       → timer sau 600ms
+═══════════════════════════════════════════════════════════════ */
+
+  /* ── DOM refs ─────────────────────────────────────────────── */
+  const synth        = window.speechSynthesis;
+  const inputText    = document.getElementById('inputText');
+  const readingArea  = document.getElementById('readingArea');
+  const btnStart     = document.getElementById('btnStart');
+  const btnPause     = document.getElementById('btnPause');
+  const btnResume    = document.getElementById('btnResume');
+  const btnStop      = document.getElementById('btnStop');
+  const voiceSelect  = document.getElementById('voiceSelect');
+  const rateSelect   = document.getElementById('rateSelect');
+  const statusBar    = document.getElementById('statusBar');
+  const statusText   = document.getElementById('statusText');
+  const progressFill = document.getElementById('progressFill');
+  const noSupport    = document.getElementById('noSupport');
+
+  if (!('speechSynthesis' in window)) noSupport.classList.add('visible');
+
+  /* ── Voice population ─────────────────────────────────────────
+     Lấy giọng en-* từ system, loại bỏ tất cả giọng Google.
+  ─────────────────────────────────────────────────────────────── */
+  function populateVoices() {
+    const all = synth.getVoices();
+    if (!all.length) return;
+
+    voiceSelect.innerHTML = '';
+
+    const voices = all.filter(v =>
+      v.lang.toLowerCase().startsWith('en') &&
+      !v.name.toLowerCase().startsWith('google')
+    );
+
+    voices.forEach(v => {
+      const opt = document.createElement('option');
+      opt.value       = v.name;
+      opt.textContent = `${v.name} (${v.lang})`;
+      if (v.default) opt.selected = true;
+      voiceSelect.appendChild(opt);
+    });
+  }
+
+  populateVoices();
+  if (synth.onvoiceschanged !== undefined) synth.onvoiceschanged = populateVoices;
+
+  /* ══════════════════════════════════════════════════════════
+     WORD SPANS — tokenise text thành các <span class="word">
+  ══════════════════════════════════════════════════════════ */
+  let wordSpans   = [];   // [{ el: HTMLElement, start: number }]
+  let activeIndex = -1;
+
+  function buildWordSpans(text) {
+    readingArea.innerHTML = '';
+    wordSpans = [];
+    const re = /(\S+)|(\s+)/g;
+    let m;
+    while ((m = re.exec(text)) !== null) {
+      if (m[1]) {
+        const span = document.createElement('span');
+        span.className     = 'word';
+        span.textContent   = m[0];
+        span.dataset.start = m.index;
+        readingArea.appendChild(span);
+        wordSpans.push({ el: span, start: m.index });
+      } else {
+        readingArea.appendChild(document.createTextNode(m[0]));
+      }
+    }
+    readingArea.classList.add('visible');
+  }
+
+  /* ── Binary search: tìm span có start lớn nhất ≤ charIndex ── */
+  function findWordIndex(charIndex) {
+    let lo = 0, hi = wordSpans.length - 1, res = -1;
+    while (lo <= hi) {
+      const mid = (lo + hi) >> 1;
+      if (wordSpans[mid].start <= charIndex) { res = mid; lo = mid + 1; }
+      else hi = mid - 1;
+    }
+    return res;
+  }
+
+  /* ── Highlight một từ ──────────────────────────────────────── */
+  function highlightWord(idx) {
+    if (idx === activeIndex) return;
+    if (activeIndex >= 0 && activeIndex < wordSpans.length) {
+      wordSpans[activeIndex].el.classList.remove('active');
+      wordSpans[activeIndex].el.classList.add('done');
+    }
+    if (idx >= 0 && idx < wordSpans.length) {
+      wordSpans[idx].el.classList.remove('done');
+      wordSpans[idx].el.classList.add('active');
+      wordSpans[idx].el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+    activeIndex = idx;
+    if (wordSpans.length > 1) {
+      progressFill.style.width = Math.round((idx / (wordSpans.length - 1)) * 100) + '%';
+    }
+  }
+
+  function clearHighlights() {
+    wordSpans.forEach(w => w.el.classList.remove('active', 'done'));
+    activeIndex = -1;
+    progressFill.style.width = '0%';
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     TIMER-BASED HIGHLIGHT (fallback khi onboundary không fire)
+     Công thức: ms/word = 60000 / (WPM_BASE × rate)
+  ══════════════════════════════════════════════════════════ */
+  let timerIds = [];
+
+  function startTimerHighlight(rate, startIdx = 0, startupDelay = 350) {
+    clearTimerHighlight();
+    const msPerWord = 60000 / (130 * parseFloat(rate));
+    wordSpans.forEach((_, i) => {
+      if (i < startIdx) return;
+      const delay = startupDelay + (i - startIdx) * msPerWord;
+      timerIds.push(setTimeout(() => highlightWord(i), delay));
+    });
+  }
+
+  function clearTimerHighlight() {
+    timerIds.forEach(clearTimeout);
+    timerIds = [];
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     STATUS & BUTTON STATE
+  ══════════════════════════════════════════════════════════ */
+  function setStatus(cls, txt) {
+    statusBar.className    = 'status-bar ' + cls;
+    statusText.textContent = txt;
+  }
+  function setButtonState(state) {
+    btnStart.disabled  = state !== 'idle';
+    btnStop.disabled   = state === 'idle';
+    btnPause.disabled  = state !== 'playing';
+    if (state === 'paused') {
+      btnPause.style.display  = 'none';
+      btnResume.style.display = 'inline-flex';
+      btnResume.disabled      = false;
+    } else {
+      btnPause.style.display  = 'inline-flex';
+      btnResume.style.display = 'none';
+      btnResume.disabled      = true;
+    }
+  }
+  function finishReading() {
+    clearTimerHighlight();
+    wordSpans.forEach(w => { w.el.classList.remove('active'); w.el.classList.add('done'); });
+    progressFill.style.width = '100%';
+    setStatus('', 'Đọc xong 🌸');
+    setButtonState('idle');
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     WEB SPEECH API
+
+     FIX HIGHLIGHT — 3 tầng dự phòng:
+     ┌───────────────────────────────────────────────────────┐
+     │ Tầng 1 (onboundary + charIndex > 0)                  │
+     │   → Dùng binary search → kết quả chính xác nhất      │
+     │                                                       │
+     │ Tầng 2 (onboundary nhưng charIndex luôn = 0)         │
+     │   → Một số online/neural voices bị lỗi charIndex     │
+     │   → Dùng wordCounter tăng dần mỗi boundary event     │
+     │                                                       │
+     │ Tầng 3 (onboundary không fire)                       │
+     │   → Một số voices không kích hoạt event này          │
+     │   → Sau 600ms từ onstart mà chưa thấy boundary nào  │
+     │      → tự động bật timer-based highlight             │
+     └───────────────────────────────────────────────────────┘
+  ══════════════════════════════════════════════════════════ */
+  let utterance      = null;
+  let wordCounter    = 0;   // fallback word counter (tầng 2)
+  let boundaryFired  = false; // để phát hiện tầng 3
+
+  function speakWS(text, voiceName, rate) {
+    synth.cancel();
+    clearTimerHighlight();
+    buildWordSpans(text);
+    clearHighlights();
+    wordCounter   = 0;
+    boundaryFired = false;
+
+    utterance         = new SpeechSynthesisUtterance(text);
+    utterance.voice   = synth.getVoices().find(v => v.name === voiceName) || null;
+    utterance.rate    = parseFloat(rate);
+    utterance.pitch   = 1;
+    utterance.volume  = 1;
+
+    /* ─── onboundary: Tầng 1 + Tầng 2 ───────────────────────
+       Mỗi khi giọng đọc chạm ranh giới từ, trình duyệt bắn sự kiện này.
+       event.charIndex = vị trí ký tự trong chuỗi text gốc.
+
+       Vấn đề: Một số voices (neural/online) luôn trả charIndex = 0.
+       Giải pháp: Nếu charIndex > 0 → dùng binary search (tầng 1).
+                  Nếu charIndex = 0 → dùng wordCounter++ (tầng 2).
+    ─────────────────────────────────────────────────────────── */
+    utterance.onboundary = (e) => {
+      if (e.name !== 'word') return;
+      boundaryFired = true;     // báo cho tầng 3 biết event đang hoạt động
+      clearTimerHighlight();    // hủy timer fallback nếu đang chạy
+
+      let idx;
+      if (e.charIndex > 0) {
+        // Tầng 1: charIndex hợp lệ → binary search (chính xác)
+        idx = findWordIndex(e.charIndex);
+        wordCounter = idx + 1;  // giữ counter đồng bộ
+      } else {
+        // Tầng 2: charIndex = 0 (broken) → đếm tuần tự
+        idx = Math.min(wordCounter, wordSpans.length - 1);
+        wordCounter++;
+      }
+      highlightWord(idx);
+    };
+
+    utterance.onstart = () => {
+      setStatus('playing', 'Đang đọc… 🎵');
+      setButtonState('playing');
+
+      // Tầng 3: sau 600ms nếu chưa có boundary nào → bật timer
+      setTimeout(() => {
+        if (!boundaryFired) {
+          console.info('[MYMY] onboundary không hoạt động → dùng timer fallback');
+          startTimerHighlight(utterance.rate, 0, 0);
+        }
+      }, 600);
+    };
+
+    utterance.onpause  = () => { setStatus('paused', 'Đã tạm dừng ⏸'); setButtonState('paused'); };
+    utterance.onresume = () => { setStatus('playing', 'Đang đọc… 🎵'); setButtonState('playing'); };
+    utterance.onend    = finishReading;
+    utterance.onerror  = (e) => {
+      if (e.error === 'canceled' || e.error === 'interrupted') return;
+      clearTimerHighlight();
+      setStatus('', '❌ Lỗi: ' + e.error);
+      setButtonState('idle');
+    };
+
+    synth.speak(utterance);
+  }
+
+  /* ── Start ──────────────────────────────────────────────── */
+  btnStart.addEventListener('click', () => {
+    const text = inputText.value.trim();
+    if (!text) {
+      inputText.focus();
+      inputText.style.borderColor = '#fb7185';
+      setTimeout(() => (inputText.style.borderColor = ''), 1500);
+      return;
+    }
+    synth.cancel();
+    clearTimerHighlight();
+    speakWS(text, voiceSelect.value, parseFloat(rateSelect.value));
+  });
+
+  /* ── Pause ──────────────────────────────────────────────── */
+  btnPause.addEventListener('click', () => {
+    if (synth.speaking && !synth.paused) synth.pause();
+  });
+
+  /* ── Resume ─────────────────────────────────────────────── */
+  btnResume.addEventListener('click', () => {
+    if (synth.paused) synth.resume();
+  });
+
+  /* ── Stop ───────────────────────────────────────────────── */
+  btnStop.addEventListener('click', () => {
+    synth.cancel();
+    clearTimerHighlight();
+    clearHighlights();
+    setStatus('', 'Đã hủy');
+    setButtonState('idle');
+  });
+
+  /* ── Keyboard ───────────────────────────────────────────── */
+  document.addEventListener('keydown', (e) => {
+    if (document.activeElement === inputText) return;
+    if (e.code === 'Space') {
+      e.preventDefault();
+      if (synth.speaking && !synth.paused) btnPause.click();
+      else btnResume.click();
+    }
+    if (e.code === 'Escape') btnStop.click();
+  });
+</script>
+</body>
+</html>
